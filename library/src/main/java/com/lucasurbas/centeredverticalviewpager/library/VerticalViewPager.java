@@ -53,7 +53,7 @@ import java.util.Comparator;
 public class VerticalViewPager extends ViewGroup {
 
     private static final String TAG = "ViewPager";
-    private static final boolean DEBUG = false;
+    protected static final boolean DEBUG = false;
 
     private static final boolean USE_CACHE = false;
 
@@ -97,33 +97,33 @@ public class VerticalViewPager extends ViewGroup {
         }
     };
 
-    private final ArrayList<ItemInfo> mItems = new ArrayList<ItemInfo>();
+    protected final ArrayList<ItemInfo> mItems = new ArrayList<ItemInfo>();
     private final ItemInfo mTempItem = new ItemInfo();
 
     private final Rect mTempRect = new Rect();
 
-    private PagerAdapter mAdapter;
-    private int mCurItem;   // Index of currently displayed page.
+    protected PagerAdapter mAdapter;
+    protected int mCurItem;   // Index of currently displayed page.
     private int mRestoredCurItem = -1;
     private Parcelable mRestoredAdapterState = null;
     private ClassLoader mRestoredClassLoader = null;
     private Scroller mScroller;
     private PagerObserver mObserver;
 
-    private int mPageMargin;
-    private Drawable mMarginDrawable;
-    private int mLeftPageBounds;
-    private int mRightPageBounds;
+    protected int mPageMargin;
+    protected Drawable mMarginDrawable;
+    protected int mLeftPageBounds;
+    protected int mRightPageBounds;
 
     // Offsets of the first and last items, if known.
     // Set during population, used to determine if we are at the beginning
     // or end of the pager data set during touch scrolling.
-    private float mFirstOffset = -Float.MAX_VALUE;
-    private float mLastOffset = Float.MAX_VALUE;
+    protected float mFirstOffset = -Float.MAX_VALUE;
+    protected float mLastOffset = Float.MAX_VALUE;
 
-    private int mChildWidthMeasureSpec;
-    private int mChildHeightMeasureSpec;
-    private boolean mInLayout;
+    protected int mChildWidthMeasureSpec;
+    protected int mChildHeightMeasureSpec;
+    protected boolean mInLayout;
 
     private boolean mScrollingCacheEnabled;
 
@@ -133,8 +133,8 @@ public class VerticalViewPager extends ViewGroup {
     private boolean mIsBeingDragged;
     private boolean mIsUnableToDrag;
     private boolean mIgnoreGutter;
-    private int mDefaultGutterSize;
-    private int mGutterSize;
+    protected int mDefaultGutterSize;
+    protected int mGutterSize;
     private int mTouchSlop;
     /**
      * Position of the last motion event.
@@ -171,13 +171,13 @@ public class VerticalViewPager extends ViewGroup {
     private boolean mFakeDragging;
     private long mFakeDragBeginTime;
 
-    private EdgeEffectCompat mTopEdge;
-    private EdgeEffectCompat mBottomEdge;
+    protected EdgeEffectCompat mTopEdge;
+    protected EdgeEffectCompat mBottomEdge;
 
-    private boolean mFirstLayout = true;
+    protected boolean mFirstLayout = true;
     private boolean mNeedCalculatePageOffsets = false;
     private boolean mCalledSuper;
-    private int mDecorChildCount;
+    protected int mDecorChildCount;
 
     private ViewPager.OnPageChangeListener mOnPageChangeListener;
     private ViewPager.OnPageChangeListener mInternalPageChangeListener;
@@ -369,7 +369,7 @@ public class VerticalViewPager extends ViewGroup {
 //        return getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
 //    }
 
-    private int getClientHeight() {
+    protected int getClientHeight() {
         return getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
     }
 
@@ -448,7 +448,7 @@ public class VerticalViewPager extends ViewGroup {
         }
     }
 
-    private void scrollToItem(int item, boolean smoothScroll, int velocity,
+    protected void scrollToItem(int item, boolean smoothScroll, int velocity,
                               boolean dispatchSelected) {
         final ItemInfo curInfo = infoForPosition(item);
         int destY = 0;
@@ -1977,16 +1977,19 @@ public class VerticalViewPager extends ViewGroup {
             bottomBound = lastItem.offset * height;
         }
 
+
         if (scrollY < topBound) {
             if (topAbsolute) {
                 float over = topBound - scrollY;
                 needsInvalidate = mTopEdge.onPull(Math.abs(over) / height);
+                Log.v(TAG, "mTopEdge.onPull: " + over);
             }
             scrollY = topBound;
         } else if (scrollY > bottomBound) {
             if (bottomAbsolute) {
                 float over = scrollY - bottomBound;
                 needsInvalidate = mBottomEdge.onPull(Math.abs(over) / height);
+                Log.v(TAG, "mBottomEdge.onPull: " + over);
             }
             scrollY = bottomBound;
         }
@@ -2067,6 +2070,12 @@ public class VerticalViewPager extends ViewGroup {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+
+        drawOverscroll(canvas);
+    }
+
+    protected void drawOverscroll(Canvas canvas){
+
         boolean needsInvalidate = false;
 
         final int overScrollMode = ViewCompat.getOverScrollMode(this);
@@ -2074,6 +2083,7 @@ public class VerticalViewPager extends ViewGroup {
                 (overScrollMode == ViewCompat.OVER_SCROLL_IF_CONTENT_SCROLLS &&
                         mAdapter != null && mAdapter.getCount() > 1)) {
             if (!mTopEdge.isFinished()) {
+
                 final int restoreCount = canvas.save();
                 final int height = getHeight();
                 final int width = getWidth() - getPaddingLeft() - getPaddingRight();
@@ -2084,6 +2094,7 @@ public class VerticalViewPager extends ViewGroup {
                 canvas.restoreToCount(restoreCount);
             }
             if (!mBottomEdge.isFinished()) {
+
                 final int restoreCount = canvas.save();
                 final int height = getHeight();
                 final int width = getWidth() - getPaddingLeft() - getPaddingRight();
@@ -2108,6 +2119,11 @@ public class VerticalViewPager extends ViewGroup {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
+        drawMargins(canvas);
+    }
+
+    protected void drawMargins(Canvas canvas){
 
         // Draw the margin drawable between pages if needed.
         if (mPageMargin > 0 && mMarginDrawable != null && mItems.size() > 0 && mAdapter != null) {

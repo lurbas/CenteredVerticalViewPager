@@ -9,6 +9,6 @@ public abstract class CenteredPagerAdapter extends PagerAdapter {
 
     @Override
     public float getPageWidth(int position) {
-        return (0.7f);
+        return (1.f);
     }
 }

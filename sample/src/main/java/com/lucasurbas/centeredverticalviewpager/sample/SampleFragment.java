@@ -40,7 +40,7 @@ public class SampleFragment extends Fragment {
     private ArrayList<String> generateItems() {
 
         ArrayList<String> items = new ArrayList<String>();
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 5; i++){
             items.add("Item " + i);
         }
         return items;
