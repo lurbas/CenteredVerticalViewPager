@@ -878,7 +878,7 @@ public class VerticalViewPager extends ViewGroup {
             curItem = addNewItem(mCurItem, curIndex);
         }
 
-        // Fill 3x the available width or up to the number of offscreen
+        // Fill 3x the available height or up to the number of offscreen
         // pages requested to either side, whichever is larger.
         // If we have no current item we have no work to do.
         if (curItem != null) {
@@ -887,7 +887,7 @@ public class VerticalViewPager extends ViewGroup {
             ItemInfo ii = itemIndex >= 0 ? mItems.get(itemIndex) : null;
             final int clientHeight = getClientHeight();
             final float topHeightNeeded = clientHeight <= 0 ? 0 :
-                    2.f - curItem.heightFactor + (float) getPaddingLeft() / (float) clientHeight;
+                    2.f - curItem.heightFactor + (float) getPaddingTop() / (float) clientHeight;
             for (int pos = mCurItem - 1; pos >= 0; pos--) {
                 if (extraHeightTop >= topHeightNeeded && pos < startPos) {
                     if (ii == null) {
@@ -921,7 +921,7 @@ public class VerticalViewPager extends ViewGroup {
             if (extraHeightBottom < 2.f) {
                 ii = itemIndex < mItems.size() ? mItems.get(itemIndex) : null;
                 final float bottomHeightNeeded = clientHeight <= 0 ? 0 :
-                        (float) getPaddingRight() / (float) clientHeight + 2.f;
+                        (float) getPaddingBottom() / (float) clientHeight + 2.f;
                 for (int pos = mCurItem + 1; pos < N; pos++) {
                     if (extraHeightBottom >= bottomHeightNeeded && pos > endPos) {
                         if (ii == null) {
@@ -2112,9 +2112,10 @@ public class VerticalViewPager extends ViewGroup {
         // Draw the margin drawable between pages if needed.
         if (mPageMargin > 0 && mMarginDrawable != null && mItems.size() > 0 && mAdapter != null) {
             final int scrollY = getScrollY();
-            final int height = getHeight();
+            final int height = getHeight() - getPaddingTop() - getPaddingBottom();
 
             final float marginOffset = (float) mPageMargin / height;
+            final float paddingOffset = (float) getPaddingTop() / height;
             int itemIndex = 0;
             ItemInfo ii = mItems.get(0);
             float offset = ii.offset;
@@ -2128,11 +2129,11 @@ public class VerticalViewPager extends ViewGroup {
 
                 float drawAt;
                 if (pos == ii.position) {
-                    drawAt = (ii.offset + ii.heightFactor) * height;
+                    drawAt = (ii.offset + ii.heightFactor + paddingOffset) * height;
                     offset = ii.offset + ii.heightFactor + marginOffset;
                 } else {
                     float heightFactor = mAdapter.getPageWidth(pos);
-                    drawAt = (offset + heightFactor) * height;
+                    drawAt = (offset + heightFactor + paddingOffset) * height;
                     offset += heightFactor + marginOffset;
                 }
 
