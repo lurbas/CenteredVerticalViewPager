@@ -7,7 +7,7 @@ import android.view.View;
  */
 public class CenterPageTransformer implements VerticalViewPager.PageTransformer {
 
-    private static final float MIN_ALPHA = 0.5f;
+    private static final float MIN_ALPHA = 0.3f;
 
     public void transformPage(int containerHeight, View view, float position) {
         int viewHeight = view.getHeight();

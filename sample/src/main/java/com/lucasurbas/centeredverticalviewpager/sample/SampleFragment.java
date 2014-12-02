@@ -25,8 +25,8 @@ public class SampleFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_sample, container, false);
         vpFeed = (CenteredVerticalViewPager) rootView.findViewById(R.id.vpFeed);
         //vpFeed.setPageMarginDrawable(android.R.color.black);
-        vpFeed.setPageMargin(20);
-        vpFeed.setPagePreviewHeight(200);
+        vpFeed.setPageMargin(Utils.dpToPixels(getActivity(), 8));
+        vpFeed.setPagePreviewHeight(Utils.dpToPixels(getActivity(), 96));
         return rootView;
     }
 
