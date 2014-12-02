@@ -176,13 +176,13 @@ public class VerticalViewPager extends ViewGroup {
 
     protected boolean mFirstLayout = true;
     private boolean mNeedCalculatePageOffsets = false;
-    private boolean mCalledSuper;
+    protected boolean mCalledSuper;
     protected int mDecorChildCount;
 
-    private ViewPager.OnPageChangeListener mOnPageChangeListener;
-    private ViewPager.OnPageChangeListener mInternalPageChangeListener;
+    protected ViewPager.OnPageChangeListener mOnPageChangeListener;
+    protected ViewPager.OnPageChangeListener mInternalPageChangeListener;
     private OnAdapterChangeListener mAdapterChangeListener;
-    private ViewPager.PageTransformer mPageTransformer;
+    protected VerticalViewPager.PageTransformer mPageTransformer;
     private Method mSetChildrenDrawingOrderEnabled;
 
     private static final int DRAW_ORDER_DEFAULT = 0;
@@ -229,6 +229,10 @@ public class VerticalViewPager extends ViewGroup {
      * pager decorations by default.
      */
     interface Decor {
+    }
+
+    interface PageTransformer{
+        public void transformPage(int containerHeight, View view, float position);
     }
 
     public VerticalViewPager(Context context) {
@@ -500,7 +504,7 @@ public class VerticalViewPager extends ViewGroup {
      *                            to be drawn from last to first instead of first to last.
      * @param transformer         PageTransformer that will modify each page's animation properties
      */
-    public void setPageTransformer(boolean reverseDrawingOrder, ViewPager.PageTransformer transformer) {
+    public void setPageTransformer(boolean reverseDrawingOrder, VerticalViewPager.PageTransformer transformer) {
         if (Build.VERSION.SDK_INT >= 11) {
             final boolean hasTransformer = transformer != null;
             final boolean needsPopulate = hasTransformer != (mPageTransformer != null);
@@ -1622,7 +1626,7 @@ public class VerticalViewPager extends ViewGroup {
                 if (lp.isDecor) continue;
 
                 final float transformPos = (float) (child.getTop() - scrollY) / getClientHeight();
-                mPageTransformer.transformPage(child, transformPos);
+                mPageTransformer.transformPage(getClientHeight(), child, transformPos);
             }
         }
 
@@ -1982,14 +1986,12 @@ public class VerticalViewPager extends ViewGroup {
             if (topAbsolute) {
                 float over = topBound - scrollY;
                 needsInvalidate = mTopEdge.onPull(Math.abs(over) / height);
-                Log.v(TAG, "mTopEdge.onPull: " + over);
             }
             scrollY = topBound;
         } else if (scrollY > bottomBound) {
             if (bottomAbsolute) {
                 float over = scrollY - bottomBound;
                 needsInvalidate = mBottomEdge.onPull(Math.abs(over) / height);
-                Log.v(TAG, "mBottomEdge.onPull: " + over);
             }
             scrollY = bottomBound;
         }

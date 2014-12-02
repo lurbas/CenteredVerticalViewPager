@@ -24,6 +24,23 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
     private void prepare() {
         setOffscreenPageLimit(2);
+//        setInternalPageChangeListener(new ViewPager.OnPageChangeListener() {
+//            @Override
+//            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+//                //Log.v(TAG, "onPageScrolled: pos: "  + position + ", posOffset: " + positionOffset);
+//            }
+//
+//            @Override
+//            public void onPageSelected(int position) {
+//
+//            }
+//
+//            @Override
+//            public void onPageScrollStateChanged(int state) {
+//
+//            }
+//        });
+        setPageTransformer(false, new ItemTransformer());
     }
 
     protected int getClientHeight() {
@@ -118,7 +135,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
                 final LayoutParams lp = (LayoutParams) child.getLayoutParams();
                 if (lp == null || !lp.isDecor) {
                     final int heightSpec = MeasureSpec.makeMeasureSpec(
-                            (int) (childHeightSize * lp.heightFactor), MeasureSpec.EXACTLY);
+                            (int) (childHeightSize * lp.heightFactor), MeasureSpec.AT_MOST);
                     child.measure(mChildWidthMeasureSpec, heightSpec);
                 }
             }
@@ -183,6 +200,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
                             paddingBottom += child.getMeasuredHeight();
                             break;
                     }
+
                     childTop += scrollY;
                     child.layout(childLeft, childTop,
                             childLeft + child.getMeasuredWidth(),
@@ -218,6 +236,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
                     if (DEBUG) Log.v(TAG, "Positioning #" + i + " " + child + " f=" + ii.object
                             + ":" + childLeft + "," + childTop + " " + child.getMeasuredWidth()
                             + "x" + child.getMeasuredHeight());
+
                     child.layout(childLeft, childTop,
                             childLeft + child.getMeasuredWidth(),
                             childTop + child.getMeasuredHeight());
@@ -318,5 +337,72 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
             // Keep animating
             ViewCompat.postInvalidateOnAnimation(this);
         }
+    }
+
+    @Override
+    protected void onPageScrolled(int position, float offset, int offsetPixels) {
+        // Offset any decor views if needed - keep them on-screen at all times.
+        if (mDecorChildCount > 0) {
+            final int scrollY = getScrollY();
+            int paddingTop = getPaddingTop();
+            int paddingBottom = getPaddingBottom();
+            final int height = getHeight();
+            final int childCount = getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                final View child = getChildAt(i);
+                final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                if (!lp.isDecor) continue;
+
+                final int vgrav = lp.gravity & Gravity.VERTICAL_GRAVITY_MASK;
+                int childTop = 0;
+                switch (vgrav) {
+                    default:
+                        childTop = paddingTop;
+                        break;
+                    case Gravity.TOP:
+                        childTop = paddingTop;
+                        paddingTop += child.getHeight();
+                        break;
+                    case Gravity.CENTER_VERTICAL:
+                        childTop = Math.max((height - child.getMeasuredHeight()) / 2,
+                                paddingTop);
+                        break;
+                    case Gravity.BOTTOM:
+                        childTop = height - paddingBottom - child.getMeasuredHeight();
+                        paddingBottom += child.getMeasuredHeight();
+                        break;
+                }
+                childTop += scrollY;
+
+                final int childOffset = childTop - child.getTop();
+                if (childOffset != 0) {
+                    child.offsetTopAndBottom(childOffset);
+                }
+            }
+        }
+
+        if (mOnPageChangeListener != null) {
+            mOnPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+        }
+        if (mInternalPageChangeListener != null) {
+            mInternalPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+        }
+
+        if (mPageTransformer != null) {
+            final int scrollY = getScrollY();
+            final int childCount = getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                final View child = getChildAt(i);
+                final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+
+                if (lp.isDecor) continue;
+
+                final float transformPos = (float) (child.getTop() - mPadding - scrollY) / (getClientHeight());
+                Log.v(TAG, "item: " + i + ", transformPos: "  + transformPos);
+                mPageTransformer.transformPage(getClientHeight(), child, transformPos);
+            }
+        }
+
+        mCalledSuper = true;
     }
 }

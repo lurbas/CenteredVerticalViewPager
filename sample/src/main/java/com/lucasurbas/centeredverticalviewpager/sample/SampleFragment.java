@@ -40,8 +40,19 @@ public class SampleFragment extends Fragment {
     private ArrayList<String> generateItems() {
 
         ArrayList<String> items = new ArrayList<String>();
-        for(int i = 0; i < 5; i++){
-            items.add("Item " + i);
+        for(int i = 0; i < 11; i++){
+            String text = "";
+            for(int j = 0; j < i+1; j++){
+                text += ("Item " + i + "\n");
+            }
+            items.add(text.substring(0, text.length() - 1));
+        }
+        for(int i = 0; i < 3; i++){
+            String text = "";
+            for(int j = 0; j < i+1; j++){
+                text += ("Item " + i + "\n");
+            }
+            items.add(text.substring(0, text.length() - 1));
         }
         return items;
     }
