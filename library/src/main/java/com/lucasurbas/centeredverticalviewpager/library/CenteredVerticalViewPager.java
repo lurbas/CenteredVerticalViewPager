@@ -15,7 +15,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
     private static final String TAG = CenteredVerticalViewPager.class.getSimpleName();
 
-    private int mPadding = 200;
+    private int pagePreviewHeight = 0;
 
     public CenteredVerticalViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -24,11 +24,16 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
     private void prepare() {
         setOffscreenPageLimit(2);
-        setPageTransformer(false, new ItemTransformer());
+        setPageTransformer(false, new CenterPageTransformer());
+    }
+
+    public void setPagePreviewHeight(int pagePreviewHeight) {
+        this.pagePreviewHeight = pagePreviewHeight;
+        requestLayout();
     }
 
     protected int getClientHeight() {
-        return getMeasuredHeight() - mPadding * 2;
+        return getMeasuredHeight() - pagePreviewHeight * 2;
     }
 
     @Override
@@ -47,7 +52,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
         // Children are just made to fill our space.
         int childWidthSize = getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
-        int childHeightSize = measuredHeight - mPadding * 2;
+        int childHeightSize = measuredHeight - pagePreviewHeight * 2;
 
         /*
          * Make sure all children have been properly measured. Decor views first.
@@ -132,9 +137,9 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
         int width = r - l;
         int height = b - t;
         int paddingLeft = getPaddingLeft();
-        int paddingTop = mPadding;
+        int paddingTop = pagePreviewHeight;
         int paddingRight = getPaddingRight();
-        int paddingBottom = mPadding;
+        int paddingBottom = pagePreviewHeight;
         final int scrollY = getScrollY();
 
         int decorCount = 0;
@@ -224,6 +229,11 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
                     child.layout(childLeft, childTop,
                             childLeft + child.getMeasuredWidth(),
                             childTop + child.getMeasuredHeight());
+
+                    if (mPageTransformer != null) {
+                        final float transformPos = (float) (child.getTop() - pagePreviewHeight - scrollY) / (getClientHeight());
+                        mPageTransformer.transformPage(getClientHeight(), child, transformPos);
+                    }
                 }
             }
         }
@@ -238,15 +248,15 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
     }
 
     @Override
-    protected void drawMargins(Canvas canvas){
+    protected void drawMargins(Canvas canvas) {
 
         // Draw the margin drawable between pages if needed.
         if (mPageMargin > 0 && mMarginDrawable != null && mItems.size() > 0 && mAdapter != null) {
             final int scrollY = getScrollY();
-            final int height = getHeight() - mPadding * 2;
+            final int height = getHeight() - pagePreviewHeight * 2;
 
             final float marginOffset = (float) mPageMargin / height;
-            final float paddingOffset = (float) mPadding / height;
+            final float paddingOffset = (float) pagePreviewHeight / height;
             int itemIndex = 0;
             ItemInfo ii = mItems.get(0);
             float offset = ii.offset;
@@ -307,7 +317,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
                 final int width = getWidth() - getPaddingLeft() - getPaddingRight();
 
                 canvas.rotate(180);
-                canvas.translate(-width - getPaddingLeft(), -((mLastOffset + 1) * height) - 2 * mPadding);
+                canvas.translate(-width - getPaddingLeft(), -((mLastOffset + 1) * height) - 2 * pagePreviewHeight);
                 mBottomEdge.setSize(width, height);
                 needsInvalidate |= mBottomEdge.draw(canvas);
                 canvas.restoreToCount(restoreCount);
@@ -381,8 +391,7 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
                 if (lp.isDecor) continue;
 
-                final float transformPos = (float) (child.getTop() - mPadding - scrollY) / (getClientHeight());
-                Log.v(TAG, "item: " + i + ", transformPos: "  + transformPos);
+                final float transformPos = (float) (child.getTop() - pagePreviewHeight - scrollY) / (getClientHeight());
                 mPageTransformer.transformPage(getClientHeight(), child, transformPos);
             }
         }

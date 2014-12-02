@@ -5,7 +5,7 @@ import android.view.View;
 /**
  * Created by Lucas on 12/2/14.
  */
-public class ItemTransformer implements VerticalViewPager.PageTransformer {
+public class CenterPageTransformer implements VerticalViewPager.PageTransformer {
 
     private static final float MIN_ALPHA = 0.5f;
 
