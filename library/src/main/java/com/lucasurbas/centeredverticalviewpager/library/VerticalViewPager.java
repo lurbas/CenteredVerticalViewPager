@@ -102,7 +102,7 @@ public class VerticalViewPager extends ViewGroup {
 
     private final Rect mTempRect = new Rect();
 
-    protected CenteredPagerAdapter mAdapter;
+    protected PagerAdapter mAdapter;
     protected int mCurItem;   // Index of currently displayed page.
     private int mRestoredCurItem = -1;
     private Parcelable mRestoredAdapterState = null;
@@ -221,7 +221,7 @@ public class VerticalViewPager extends ViewGroup {
      * Used internally to monitor when adapters are switched.
      */
     interface OnAdapterChangeListener {
-        public void onAdapterChanged(CenteredPagerAdapter oldAdapter, CenteredPagerAdapter newAdapter);
+        public void onAdapterChanged(PagerAdapter oldAdapter, PagerAdapter newAdapter);
     }
 
     /**
@@ -299,7 +299,7 @@ public class VerticalViewPager extends ViewGroup {
      *
      * @param adapter Adapter to use
      */
-    public void setAdapter(CenteredPagerAdapter adapter) {
+    public void setAdapter(PagerAdapter adapter) {
         if (mAdapter != null) {
             mAdapter.unregisterDataSetObserver(mObserver);
             mAdapter.startUpdate(this);
@@ -314,7 +314,7 @@ public class VerticalViewPager extends ViewGroup {
             scrollTo(0, 0);
         }
 
-        final CenteredPagerAdapter oldAdapter = mAdapter;
+        final PagerAdapter oldAdapter = mAdapter;
         mAdapter = adapter;
         mExpectedAdapterCount = 0;
 
@@ -361,7 +361,7 @@ public class VerticalViewPager extends ViewGroup {
      *
      * @return The currently registered PagerAdapter
      */
-    public CenteredPagerAdapter getAdapter() {
+    public PagerAdapter getAdapter() {
         return mAdapter;
     }
 
