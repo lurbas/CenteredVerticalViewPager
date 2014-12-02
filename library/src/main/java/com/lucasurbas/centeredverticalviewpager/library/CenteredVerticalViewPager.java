@@ -24,22 +24,6 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
     private void prepare() {
         setOffscreenPageLimit(2);
-//        setInternalPageChangeListener(new ViewPager.OnPageChangeListener() {
-//            @Override
-//            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-//                //Log.v(TAG, "onPageScrolled: pos: "  + position + ", posOffset: " + positionOffset);
-//            }
-//
-//            @Override
-//            public void onPageSelected(int position) {
-//
-//            }
-//
-//            @Override
-//            public void onPageScrollStateChanged(int state) {
-//
-//            }
-//        });
         setPageTransformer(false, new ItemTransformer());
     }
 
