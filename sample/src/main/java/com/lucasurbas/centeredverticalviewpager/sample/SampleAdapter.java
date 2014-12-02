@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.lucasurbas.centeredverticalviewpager.library.CenteredPagerAdapter;
+import com.lucasurbas.centeredverticalviewpager.library.ICenteredItem;
 
 import java.util.ArrayList;
 
@@ -35,7 +36,7 @@ public class SampleAdapter extends CenteredPagerAdapter {
     }
 
     @Override
-    public Object instantiateItem(ViewGroup container, int position) {
+    public ICenteredItem instantiateItem(ViewGroup container, int position) {
 
         // Declare Variables
         TextView tvContent;
@@ -52,7 +53,7 @@ public class SampleAdapter extends CenteredPagerAdapter {
         // Add viewpager_item.xml to ViewPager
         container.addView(itemView);
 
-        return itemView;
+        return (ICenteredItem)itemView;
     }
 
     @Override

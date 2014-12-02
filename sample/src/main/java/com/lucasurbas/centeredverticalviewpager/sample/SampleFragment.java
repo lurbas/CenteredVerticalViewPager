@@ -24,7 +24,7 @@ public class SampleFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_sample, container, false);
         vpFeed = (CenteredVerticalViewPager) rootView.findViewById(R.id.vpFeed);
-        vpFeed.setPageMarginDrawable(android.R.color.black);
+        //vpFeed.setPageMarginDrawable(android.R.color.black);
         vpFeed.setPageMargin(50);
         return rootView;
     }
@@ -33,7 +33,7 @@ public class SampleFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        com.lucasurbas.centeredverticalviewpager.sample.SampleAdapter adapter = new SampleAdapter(getActivity(), generateItems());
+        SampleAdapter adapter = new SampleAdapter(getActivity(), generateItems());
         vpFeed.setAdapter(adapter);
     }
 
