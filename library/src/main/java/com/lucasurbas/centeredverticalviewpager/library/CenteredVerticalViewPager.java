@@ -398,4 +398,13 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
         mCalledSuper = true;
     }
+
+    @Override
+    public boolean canScrollVertically(int direction) {
+        // check if scrolling up
+        if (direction < 1) {
+            return mCurItem != 0;
+        }
+        return super.canScrollVertically(direction);
+    }
 }
