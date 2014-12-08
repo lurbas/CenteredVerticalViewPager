@@ -1,6 +1,7 @@
 package com.lucasurbas.centeredverticalviewpager.library;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
@@ -15,14 +16,26 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
     private static final String TAG = CenteredVerticalViewPager.class.getSimpleName();
 
-    private int pagePreviewHeight = 0;
+    private int pagePreviewHeight;
 
     public CenteredVerticalViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
-        prepare();
+        prepare(attrs);
     }
 
-    private void prepare() {
+    private void prepare(AttributeSet attrs) {
+
+        if (attrs != null) {
+            TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.CenteredVerticalViewPager);
+
+            try {
+                pagePreviewHeight = a.getDimensionPixelSize(R.styleable.CenteredVerticalViewPager_pagePreviewHeight, 0);
+
+            } finally {
+                a.recycle();
+            }
+        }
+
         setOffscreenPageLimit(2);
         setPageTransformer(false, new CenterPageTransformer());
     }
