@@ -3,7 +3,6 @@ package com.lucasurbas.centeredverticalviewpager.library;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
-import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -17,7 +16,6 @@ import android.support.v4.os.ParcelableCompatCreatorCallbacks;
 import android.support.v4.view.AccessibilityDelegateCompat;
 import android.support.v4.view.KeyEventCompat;
 import android.support.v4.view.MotionEventCompat;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.VelocityTrackerCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewConfigurationCompat;
@@ -108,7 +106,7 @@ public class VerticalViewPager extends ViewGroup {
     private Parcelable mRestoredAdapterState = null;
     private ClassLoader mRestoredClassLoader = null;
     private Scroller mScroller;
-    private PagerObserver mObserver;
+    private PagerAdapterDataObserver mObserver;
 
     protected int mPageMargin;
     protected Drawable mMarginDrawable;
@@ -221,7 +219,7 @@ public class VerticalViewPager extends ViewGroup {
      * Used internally to monitor when adapters are switched.
      */
     interface OnAdapterChangeListener {
-        public void onAdapterChanged(PagerAdapter oldAdapter, PagerAdapter newAdapter);
+        public void onAdapterChanged(CenteredPagerAdapter oldAdapter, CenteredPagerAdapter newAdapter);
     }
 
     /**
@@ -231,7 +229,7 @@ public class VerticalViewPager extends ViewGroup {
     interface Decor {
     }
 
-    interface PageTransformer{
+    interface PageTransformer {
         public void transformPage(int containerHeight, View view, float position);
     }
 
@@ -301,7 +299,7 @@ public class VerticalViewPager extends ViewGroup {
      */
     public void setAdapter(CenteredPagerAdapter adapter) {
         if (mAdapter != null) {
-            mAdapter.unregisterDataSetObserver(mObserver);
+            mAdapter.unregisterPagerAdapterDataObserver(mObserver);
             mAdapter.startUpdate(this);
             for (int i = 0; i < mItems.size(); i++) {
                 final ItemInfo ii = mItems.get(i);
@@ -322,7 +320,7 @@ public class VerticalViewPager extends ViewGroup {
             if (mObserver == null) {
                 mObserver = new PagerObserver();
             }
-            mAdapter.registerDataSetObserver(mObserver);
+            mAdapter.registerPagerAdapterDataObserver(mObserver);
             mPopulatePending = false;
             final boolean wasFirstLayout = mFirstLayout;
             mFirstLayout = true;
@@ -361,7 +359,7 @@ public class VerticalViewPager extends ViewGroup {
      *
      * @return The currently registered PagerAdapter
      */
-    public PagerAdapter getAdapter() {
+    public CenteredPagerAdapter getAdapter() {
         return mAdapter;
     }
 
@@ -453,7 +451,7 @@ public class VerticalViewPager extends ViewGroup {
     }
 
     protected void scrollToItem(int item, boolean smoothScroll, int velocity,
-                              boolean dispatchSelected) {
+                                boolean dispatchSelected) {
         final ItemInfo curInfo = infoForPosition(item);
         int destY = 0;
         if (curInfo != null) {
@@ -739,7 +737,7 @@ public class VerticalViewPager extends ViewGroup {
         return ii;
     }
 
-    void dataSetChanged() {
+    private void dataSetChanged() {
         // This method only gets called if our observer is attached, so mAdapter is non-null.
 
         final int adapterCount = mAdapter.getCount();
@@ -751,42 +749,32 @@ public class VerticalViewPager extends ViewGroup {
         boolean isUpdating = false;
         for (int i = 0; i < mItems.size(); i++) {
             final ItemInfo ii = mItems.get(i);
-            final int newPos = mAdapter.getItemPosition(ii.object, ii.position);
+//            final int newPos = mAdapter.getItemPosition(ii.object, ii.position);
+//
+//            if (newPos == PagerAdapter.POSITION_UNCHANGED) {
+//                needPopulate = false;
+//                continue;
+//            }
+//
+//            if (newPos == PagerAdapter.POSITION_NONE) {
+            mItems.remove(i);
+            i--;
 
-            if (newPos == PagerAdapter.POSITION_UNCHANGED) {
-                needPopulate = false;
-                continue;
+            if (!isUpdating) {
+                mAdapter.startUpdate(this);
+                isUpdating = true;
             }
 
-            if (newPos == PagerAdapter.POSITION_NONE) {
-                mItems.remove(i);
-                i--;
+            mAdapter.destroyItem(this, ii.position, ii.object);
+            needPopulate = true;
 
-                if (!isUpdating) {
-                    mAdapter.startUpdate(this);
-                    isUpdating = true;
-                }
-
-                mAdapter.destroyItem(this, ii.position, ii.object);
-                needPopulate = true;
-
-                if (mCurItem == ii.position) {
-                    // Keep the current item in the valid range
-                    newCurrItem = Math.max(0, Math.min(mCurItem, adapterCount - 1));
-                    needPopulate = true;
-                }
-                continue;
-            }
-
-            if (ii.position != newPos) {
-                if (ii.position == mCurItem) {
-                    // Our current item changed position. Follow it.
-                    newCurrItem = newPos;
-                }
-
-                ii.position = newPos;
+            if (mCurItem == ii.position) {
+                // Keep the current item in the valid range
+                newCurrItem = Math.max(0, Math.min(mCurItem, adapterCount - 1));
                 needPopulate = true;
             }
+//                continue;
+//            }
         }
 
         if (isUpdating) {
@@ -795,7 +783,6 @@ public class VerticalViewPager extends ViewGroup {
 
         Collections.sort(mItems, COMPARATOR);
 
-        Log.v(TAG, "dataSetChanged.needPopulate: " + needPopulate);
         if (needPopulate) {
             // Reset our known page widths; populate will recompute them.
             final int childCount = getChildCount();
@@ -809,6 +796,30 @@ public class VerticalViewPager extends ViewGroup {
 
             setCurrentItemInternal(newCurrItem, false, true);
             requestLayout();
+        }
+    }
+
+    private void itemRangeChanged() {
+
+        // This method only gets called if our observer is attached, so mAdapter is non-null.
+
+        final int adapterCount = mAdapter.getCount();
+        mExpectedAdapterCount = adapterCount;
+
+        boolean isUpdating = false;
+        for (int i = 0; i < mItems.size(); i++) {
+            final ItemInfo ii = mItems.get(i);
+
+            if (!isUpdating) {
+                mAdapter.startUpdate(this);
+                isUpdating = true;
+            }
+            mAdapter.updatePosition(ii.object, ii.position);
+
+        }
+
+        if (isUpdating) {
+            mAdapter.finishUpdate(this);
         }
     }
 
@@ -2078,7 +2089,7 @@ public class VerticalViewPager extends ViewGroup {
         drawOverscroll(canvas);
     }
 
-    protected void drawOverscroll(Canvas canvas){
+    protected void drawOverscroll(Canvas canvas) {
 
         boolean needsInvalidate = false;
 
@@ -2127,7 +2138,7 @@ public class VerticalViewPager extends ViewGroup {
         drawMargins(canvas);
     }
 
-    protected void drawMargins(Canvas canvas){
+    protected void drawMargins(Canvas canvas) {
 
         // Draw the margin drawable between pages if needed.
         if (mPageMargin > 0 && mMarginDrawable != null && mItems.size() > 0 && mAdapter != null) {
@@ -2731,15 +2742,26 @@ public class VerticalViewPager extends ViewGroup {
         }
     }
 
-    private class PagerObserver extends DataSetObserver {
+    private class PagerObserver extends PagerAdapterDataObserver {
+
         @Override
         public void onChanged() {
             dataSetChanged();
         }
 
         @Override
-        public void onInvalidated() {
-            dataSetChanged();
+        public void onItemRangeChanged(int positionStart, int itemCount) {
+            itemRangeChanged();
+        }
+
+        @Override
+        public void onItemRangeInserted(int positionStart, int itemCount) {
+
+        }
+
+        @Override
+        public void onItemRangeRemoved(int positionStart, int itemCount) {
+
         }
     }
 

@@ -43,7 +43,9 @@ public class SampleFragment extends Fragment {
                     @Override
                     public void run() {
                         srlRefresh.setRefreshing(false);
+
                         adapter.setItems(generateItems());
+                        adapter.notifyItemRangeChanged(0, 0);
                     }
                 }, 3000);
             }

@@ -35,15 +35,12 @@ public class SampleAdapter extends CenteredPagerAdapter {
     }
 
     @Override
-    public int getItemPosition(Object object, int position) {
+    public void updatePosition(Object object, int position) {
 
         // Update view,
-        // this will prevent from recreation all children views after calling notifyDataSetChanged()
+        // this will prevent from recreation all children views after calling notifyItmRangeChanged()
         if (object instanceof View) {
             updateView((View) object, position);
-            return POSITION_UNCHANGED;
-        } else {
-            return POSITION_NONE;
         }
     }
 
@@ -81,6 +78,5 @@ public class SampleAdapter extends CenteredPagerAdapter {
 
     public void setItems(List<String> items){
         this.items = items;
-        notifyDataSetChanged();
     }
 }
