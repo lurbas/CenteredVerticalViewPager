@@ -102,7 +102,7 @@ public class VerticalViewPager extends ViewGroup {
 
     private final Rect mTempRect = new Rect();
 
-    protected PagerAdapter mAdapter;
+    protected CenteredPagerAdapter mAdapter;
     protected int mCurItem;   // Index of currently displayed page.
     private int mRestoredCurItem = -1;
     private Parcelable mRestoredAdapterState = null;
@@ -299,7 +299,7 @@ public class VerticalViewPager extends ViewGroup {
      *
      * @param adapter Adapter to use
      */
-    public void setAdapter(PagerAdapter adapter) {
+    public void setAdapter(CenteredPagerAdapter adapter) {
         if (mAdapter != null) {
             mAdapter.unregisterDataSetObserver(mObserver);
             mAdapter.startUpdate(this);
@@ -314,7 +314,7 @@ public class VerticalViewPager extends ViewGroup {
             scrollTo(0, 0);
         }
 
-        final PagerAdapter oldAdapter = mAdapter;
+        final CenteredPagerAdapter oldAdapter = mAdapter;
         mAdapter = adapter;
         mExpectedAdapterCount = 0;
 
@@ -751,9 +751,10 @@ public class VerticalViewPager extends ViewGroup {
         boolean isUpdating = false;
         for (int i = 0; i < mItems.size(); i++) {
             final ItemInfo ii = mItems.get(i);
-            final int newPos = mAdapter.getItemPosition(ii.object);
+            final int newPos = mAdapter.getItemPosition(ii.object, ii.position);
 
             if (newPos == PagerAdapter.POSITION_UNCHANGED) {
+                needPopulate = false;
                 continue;
             }
 
@@ -794,6 +795,7 @@ public class VerticalViewPager extends ViewGroup {
 
         Collections.sort(mItems, COMPARATOR);
 
+        Log.v(TAG, "dataSetChanged.needPopulate: " + needPopulate);
         if (needPopulate) {
             // Reset our known page widths; populate will recompute them.
             final int childCount = getChildCount();

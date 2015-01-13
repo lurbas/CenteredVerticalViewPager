@@ -1,24 +1,25 @@
 package com.lucasurbas.centeredverticalviewpager.sample;
 
 import android.content.Context;
-import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import com.lucasurbas.centeredverticalviewpager.library.CenteredPagerAdapter;
+
+import java.util.List;
 
 /**
  * Created by Lucas on 11/28/14.
  */
-public class SampleAdapter extends PagerAdapter {
+public class SampleAdapter extends CenteredPagerAdapter {
     // Declare Variables
     private Context context;
-    private ArrayList<String> items;
+    private List<String> items;
     private LayoutInflater inflater;
 
-    public SampleAdapter(Context context, ArrayList<String> items) {
+    public SampleAdapter(Context context, List<String> items) {
         this.context = context;
         this.items = items;
     }
@@ -34,19 +35,28 @@ public class SampleAdapter extends PagerAdapter {
     }
 
     @Override
-    public Object instantiateItem(ViewGroup container, int position) {
+    public int getItemPosition(Object object, int position) {
 
-        // Declare Variables
-        TextView tvContent;
+        // Update view,
+        // this will prevent from recreation all children views after calling notifyDataSetChanged()
+        if (object instanceof View) {
+            updateView((View) object, position);
+            return POSITION_UNCHANGED;
+        } else {
+            return POSITION_NONE;
+        }
+    }
+
+    @Override
+    public Object instantiateItem(ViewGroup container, int position) {
 
         inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View itemView = inflater.inflate(R.layout.item_page, container,
                 false);
 
-        // Locate the TextViews in item_page.xml
-        tvContent = (TextView) itemView.findViewById(R.id.tvContent);
-        tvContent.setText(items.get(position));
+        // Update view
+        updateView(itemView, position);
 
         // Add viewpager_item.xml to ViewPager
         container.addView(itemView);
@@ -54,9 +64,23 @@ public class SampleAdapter extends PagerAdapter {
         return itemView;
     }
 
+    private void updateView(View view, int position) {
+        // Declare Variables
+        TextView tvContent;
+
+        // Locate the TextViews in item_page.xml
+        tvContent = (TextView) view.findViewById(R.id.tvContent);
+        tvContent.setText(items.get(position));
+    }
+
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         // Remove item_page.xml from ViewPager
         container.removeView((View) object);
+    }
+
+    public void setItems(List<String> items){
+        this.items = items;
+        notifyDataSetChanged();
     }
 }
