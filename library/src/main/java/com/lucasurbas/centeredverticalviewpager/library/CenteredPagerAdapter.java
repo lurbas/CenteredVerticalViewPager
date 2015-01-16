@@ -152,6 +152,20 @@ public abstract class CenteredPagerAdapter {
     }
 
     /**
+     * This method should be called by the application when new items were added.
+     */
+    public void notifyItemRangeInserted(int positionStart, int itemCount) {
+        mObservable.notifyItemRangeInserted(positionStart, itemCount);
+    }
+
+    /**
+     * This method should be called by the application when items were removed.
+     */
+    public void notifyItemRangeRemoved(int positionStart, int itemCount) {
+        mObservable.notifyItemRangeRemoved(positionStart, itemCount);
+    }
+
+    /**
      * Register an observer to receive callbacks related to the adapter's data changing.
      *
      * @param observer The {@link PagerAdapterDataObserver} which will receive callbacks.

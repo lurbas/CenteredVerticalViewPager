@@ -6,6 +6,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -23,7 +26,18 @@ public class SampleFragment extends Fragment {
 
     private CenteredVerticalViewPager vpFeed;
     private SwipeRefreshLayout srlRefresh;
+
     private SampleAdapter adapter;
+    private List<String> items;
+
+    private int i;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+        setRetainInstance(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,10 +58,11 @@ public class SampleFragment extends Fragment {
                     public void run() {
                         srlRefresh.setRefreshing(false);
 
-                        adapter.setItems(generateItems());
-                        adapter.notifyItemRangeChanged(0, 0);
+                        items = generateItems();
+                        adapter.setItems(items);
+                        adapter.notifyItemRangeChanged(0, items.size());
                     }
-                }, 3000);
+                }, 2000);
             }
         });
 
@@ -58,8 +73,45 @@ public class SampleFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        adapter = new SampleAdapter(getActivity(), generateItems());
+        if (items == null) {
+            items = generateItems();
+        }
+        adapter = new SampleAdapter(getActivity(), items);
         vpFeed.setAdapter(adapter);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_main, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+
+        int position = adapter.getCount();
+
+        switch (menuItem.getItemId()) {
+            case R.id.action_insert_item:
+                String item = generateItem();
+                items.add(position, item);
+                adapter.setItems(items);
+                adapter.notifyItemRangeInserted(position, 1);
+                return true;
+
+            case R.id.action_remove_item:
+                items.remove(position);
+                adapter.setItems(items);
+                adapter.notifyItemRangeRemoved(position, 1);
+                return true;
+        }
+        return super.onOptionsItemSelected(menuItem);
+    }
+
+    private String generateItem() {
+        String item = "Added Item " + i;
+        i++;
+        return item;
     }
 
     private List<String> generateItems() {

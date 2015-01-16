@@ -1,5 +1,8 @@
 package com.lucasurbas.centeredverticalviewpager.library;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -37,6 +40,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
@@ -44,6 +48,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Lucas on 11/28/14.
@@ -66,6 +73,8 @@ public class VerticalViewPager extends ViewGroup {
     private static final int[] LAYOUT_ATTRS = new int[]{
             android.R.attr.layout_gravity
     };
+
+    public static final float MIN_ALPHA = 0.3f;
 
     /**
      * Used to track what the expected number of items in the adapter should be.
@@ -190,6 +199,8 @@ public class VerticalViewPager extends ViewGroup {
     private ArrayList<View> mDrawingOrderedChildren;
     private static final ViewPositionComparator sPositionComparator = new ViewPositionComparator();
 
+    protected PendingActionsQueue<Runnable> pendingActionsQueue;
+
     /**
      * Indicates that the pager is in an idle, settled state. The current page
      * is fully in view and no animation is in progress.
@@ -230,6 +241,7 @@ public class VerticalViewPager extends ViewGroup {
     }
 
     interface PageTransformer {
+
         public void transformPage(int containerHeight, View view, float position);
     }
 
@@ -269,6 +281,8 @@ public class VerticalViewPager extends ViewGroup {
             ViewCompat.setImportantForAccessibility(this,
                     ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
+
+        pendingActionsQueue = new PendingActionsQueue<Runnable>();
     }
 
     @Override
@@ -737,6 +751,10 @@ public class VerticalViewPager extends ViewGroup {
         return ii;
     }
 
+    public int getPagePreviewHeight() {
+        return 0;
+    }
+
     private void dataSetChanged() {
         // This method only gets called if our observer is attached, so mAdapter is non-null.
 
@@ -749,14 +767,7 @@ public class VerticalViewPager extends ViewGroup {
         boolean isUpdating = false;
         for (int i = 0; i < mItems.size(); i++) {
             final ItemInfo ii = mItems.get(i);
-//            final int newPos = mAdapter.getItemPosition(ii.object, ii.position);
-//
-//            if (newPos == PagerAdapter.POSITION_UNCHANGED) {
-//                needPopulate = false;
-//                continue;
-//            }
-//
-//            if (newPos == PagerAdapter.POSITION_NONE) {
+
             mItems.remove(i);
             i--;
 
@@ -773,8 +784,6 @@ public class VerticalViewPager extends ViewGroup {
                 newCurrItem = Math.max(0, Math.min(mCurItem, adapterCount - 1));
                 needPopulate = true;
             }
-//                continue;
-//            }
         }
 
         if (isUpdating) {
@@ -799,7 +808,7 @@ public class VerticalViewPager extends ViewGroup {
         }
     }
 
-    private void itemRangeChanged() {
+    private void itemRangeChanged(int positionStart, int itemCount) {
 
         // This method only gets called if our observer is attached, so mAdapter is non-null.
 
@@ -809,6 +818,10 @@ public class VerticalViewPager extends ViewGroup {
         boolean isUpdating = false;
         for (int i = 0; i < mItems.size(); i++) {
             final ItemInfo ii = mItems.get(i);
+
+            if (ii.position < positionStart || ii.position >= (positionStart + itemCount)) {
+                continue;
+            }
 
             if (!isUpdating) {
                 mAdapter.startUpdate(this);
@@ -821,6 +834,173 @@ public class VerticalViewPager extends ViewGroup {
         if (isUpdating) {
             mAdapter.finishUpdate(this);
         }
+    }
+
+    private void itemRangeInserted(final int positionStart, final int itemCount) {
+
+        // This method only gets called if our observer is attached, so mAdapter is non-null.
+
+        final int adapterCount = mAdapter.getCount();
+        mExpectedAdapterCount = adapterCount;
+
+        boolean isUpdating = false;
+
+        Set<ItemInfo> itemInfos = new HashSet<ItemInfo>();
+        for (int i = 0; i < mItems.size(); i++) {
+
+
+            final ItemInfo ii = mItems.get(i);
+
+            if (positionStart <= mCurItem) {
+
+                if (ii.position < positionStart) {
+                    itemInfos.add(ii);
+                    isUpdating = true;
+                }
+
+            } else {
+
+                if (ii.position >= positionStart) {
+                    itemInfos.add(ii);
+                    isUpdating = true;
+                }
+            }
+        }
+
+        if (!isUpdating) {
+            mAdapter.startUpdate(this);
+            isUpdating = true;
+        }
+
+        final int newCurrItem;
+        if (positionStart <= mCurItem) {
+            newCurrItem = mCurItem + itemCount;
+            offsetViews(itemInfos, -itemCount);
+        } else {
+            newCurrItem = mCurItem;
+            offsetViews(itemInfos, itemCount);
+        }
+
+        addPendingAction(new Runnable() {
+
+            @Override
+            public void run() {
+
+                boolean isUpdating = false;
+
+                for (int i = 0; i < mItems.size(); i++) {
+                    final ItemInfo ii = mItems.get(i);
+                    mItems.remove(i);
+                    i--;
+
+                    if (!isUpdating) {
+                        mAdapter.startUpdate(VerticalViewPager.this);
+                        isUpdating = true;
+                    }
+
+                    mAdapter.destroyItem(VerticalViewPager.this, ii.position, ii.object);
+                }
+
+                if (isUpdating) {
+                    mAdapter.finishUpdate(VerticalViewPager.this);
+                }
+
+                Collections.sort(mItems, COMPARATOR);
+
+                // Reset our known page widths; populate will recompute them.
+                final int childCount = getChildCount();
+                for (int i = 0; i < childCount; i++) {
+                    final View child = getChildAt(i);
+                    final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                    if (!lp.isDecor) {
+                        lp.heightFactor = 0.f;
+                    }
+                }
+
+                setCurrentItemInternal(newCurrItem, false, true);
+
+                Log.v(TAG, "pendingRequestLayout");
+                requestLayout();
+
+                pendingActionsQueue.setExecuting(false);
+                tryExecuteAction();
+            }
+        });
+
+        if (isUpdating) {
+            mAdapter.finishUpdate(this);
+        }
+    }
+
+    private void offsetViews(final Set<ItemInfo> itemInfos, final float positionOffset) {
+
+        addPendingAction(new Runnable() {
+            @Override
+            public void run() {
+
+                if (mPageTransformer == null) {
+                    pendingActionsQueue.setExecuting(false);
+                    tryExecuteAction();
+                    return;
+                }
+
+                List<Animator> animators = new ArrayList<Animator>();
+
+                for (ItemInfo itemInfo : itemInfos) {
+                    final View view = (View) itemInfo.object;
+
+                    ObjectAnimator animator = ObjectAnimator.ofFloat(view, View.TRANSLATION_Y, view.getTranslationY(), positionOffset * getClientHeight() + mPageMargin);
+                    ObjectAnimator animatorAlpha = ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), MIN_ALPHA);
+
+                    animators.add(animator);
+                    animators.add(animatorAlpha);
+                }
+
+                AnimatorSet set = new AnimatorSet();
+                set.setDuration(1000);
+                set.setInterpolator(new DecelerateInterpolator(1.2f));
+                set.addListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+
+                        Log.v(TAG, "onAnimationEnd");
+                        transformPages();
+
+                        pendingActionsQueue.setExecuting(false);
+                        tryExecuteAction();
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+                    }
+                });
+
+                set.playTogether(animators);
+                set.start();
+            }
+        });
+    }
+
+    void addPendingAction(Runnable action) {
+
+        pendingActionsQueue.add(action);
+        tryExecuteAction();
+    }
+
+    synchronized protected void tryExecuteAction() {
+        if (pendingActionsQueue.isExecuting() || pendingActionsQueue.peek() == null) {
+            return;
+        }
+        pendingActionsQueue.setExecuting(true);
+        pendingActionsQueue.poll().run();
     }
 
     void populate() {
@@ -1409,6 +1589,7 @@ public class VerticalViewPager extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
         final int count = getChildCount();
         int width = r - l;
         int height = b - t;
@@ -1629,6 +1810,12 @@ public class VerticalViewPager extends ViewGroup {
             mInternalPageChangeListener.onPageScrolled(position, offset, offsetPixels);
         }
 
+        transformPages();
+
+        mCalledSuper = true;
+    }
+
+    protected void transformPages() {
         if (mPageTransformer != null) {
             final int scrollY = getScrollY();
             final int childCount = getChildCount();
@@ -1642,8 +1829,6 @@ public class VerticalViewPager extends ViewGroup {
                 mPageTransformer.transformPage(getClientHeight(), child, transformPos);
             }
         }
-
-        mCalledSuper = true;
     }
 
     private void completeScroll(boolean postEvents) {
@@ -2751,12 +2936,12 @@ public class VerticalViewPager extends ViewGroup {
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            itemRangeChanged();
+            itemRangeChanged(positionStart, itemCount);
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-
+            itemRangeInserted(positionStart, itemCount);
         }
 
         @Override

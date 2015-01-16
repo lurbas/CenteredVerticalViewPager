@@ -45,6 +45,11 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
         requestLayout();
     }
 
+    @Override
+    public int getPagePreviewHeight(){
+        return  pagePreviewHeight;
+    }
+
     protected int getClientHeight() {
         return getMeasuredHeight() - pagePreviewHeight * 2;
     }
@@ -146,6 +151,9 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+        Log.v(TAG, "onLayout");
+
         final int count = getChildCount();
         int width = r - l;
         int height = b - t;
@@ -346,55 +354,62 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
         }
     }
 
+//    @Override
+//    protected void onPageScrolled(int position, float offset, int offsetPixels) {
+//        // Offset any decor views if needed - keep them on-screen at all times.
+//        if (mDecorChildCount > 0) {
+//            final int scrollY = getScrollY();
+//            int paddingTop = getPaddingTop();
+//            int paddingBottom = getPaddingBottom();
+//            final int height = getHeight();
+//            final int childCount = getChildCount();
+//            for (int i = 0; i < childCount; i++) {
+//                final View child = getChildAt(i);
+//                final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+//                if (!lp.isDecor) continue;
+//
+//                final int vgrav = lp.gravity & Gravity.VERTICAL_GRAVITY_MASK;
+//                int childTop = 0;
+//                switch (vgrav) {
+//                    default:
+//                        childTop = paddingTop;
+//                        break;
+//                    case Gravity.TOP:
+//                        childTop = paddingTop;
+//                        paddingTop += child.getHeight();
+//                        break;
+//                    case Gravity.CENTER_VERTICAL:
+//                        childTop = Math.max((height - child.getMeasuredHeight()) / 2,
+//                                paddingTop);
+//                        break;
+//                    case Gravity.BOTTOM:
+//                        childTop = height - paddingBottom - child.getMeasuredHeight();
+//                        paddingBottom += child.getMeasuredHeight();
+//                        break;
+//                }
+//                childTop += scrollY;
+//
+//                final int childOffset = childTop - child.getTop();
+//                if (childOffset != 0) {
+//                    child.offsetTopAndBottom(childOffset);
+//                }
+//            }
+//        }
+//
+//        if (mOnPageChangeListener != null) {
+//            mOnPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+//        }
+//        if (mInternalPageChangeListener != null) {
+//            mInternalPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+//        }
+//
+//        transformPages();
+//
+//        mCalledSuper = true;
+//    }
+
     @Override
-    protected void onPageScrolled(int position, float offset, int offsetPixels) {
-        // Offset any decor views if needed - keep them on-screen at all times.
-        if (mDecorChildCount > 0) {
-            final int scrollY = getScrollY();
-            int paddingTop = getPaddingTop();
-            int paddingBottom = getPaddingBottom();
-            final int height = getHeight();
-            final int childCount = getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                final View child = getChildAt(i);
-                final LayoutParams lp = (LayoutParams) child.getLayoutParams();
-                if (!lp.isDecor) continue;
-
-                final int vgrav = lp.gravity & Gravity.VERTICAL_GRAVITY_MASK;
-                int childTop = 0;
-                switch (vgrav) {
-                    default:
-                        childTop = paddingTop;
-                        break;
-                    case Gravity.TOP:
-                        childTop = paddingTop;
-                        paddingTop += child.getHeight();
-                        break;
-                    case Gravity.CENTER_VERTICAL:
-                        childTop = Math.max((height - child.getMeasuredHeight()) / 2,
-                                paddingTop);
-                        break;
-                    case Gravity.BOTTOM:
-                        childTop = height - paddingBottom - child.getMeasuredHeight();
-                        paddingBottom += child.getMeasuredHeight();
-                        break;
-                }
-                childTop += scrollY;
-
-                final int childOffset = childTop - child.getTop();
-                if (childOffset != 0) {
-                    child.offsetTopAndBottom(childOffset);
-                }
-            }
-        }
-
-        if (mOnPageChangeListener != null) {
-            mOnPageChangeListener.onPageScrolled(position, offset, offsetPixels);
-        }
-        if (mInternalPageChangeListener != null) {
-            mInternalPageChangeListener.onPageScrolled(position, offset, offsetPixels);
-        }
-
+    protected void transformPages() {
         if (mPageTransformer != null) {
             final int scrollY = getScrollY();
             final int childCount = getChildCount();
@@ -408,8 +423,6 @@ public class CenteredVerticalViewPager extends VerticalViewPager {
                 mPageTransformer.transformPage(getClientHeight(), child, transformPos);
             }
         }
-
-        mCalledSuper = true;
     }
 
     @Override

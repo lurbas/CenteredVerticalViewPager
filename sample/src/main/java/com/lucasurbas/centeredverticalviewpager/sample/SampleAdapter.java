@@ -38,7 +38,7 @@ public class SampleAdapter extends CenteredPagerAdapter {
     public void updatePosition(Object object, int position) {
 
         // Update view,
-        // this will prevent from recreation all children views after calling notifyItmRangeChanged()
+        // this will prevent from recreation all children views after calling notifyItemRangeChanged()
         if (object instanceof View) {
             updateView((View) object, position);
         }

@@ -3,6 +3,9 @@
 
     <string name="app_name">CenteredVerticalViewPager</string>
     <string name="hello_world">Hello world!</string>
+
     <string name="action_settings">Settings</string>
+    <string name="action_insert_item">Insert Item</string>
+    <string name="action_remove_item">Remove Item</string>
 
 </resources>
