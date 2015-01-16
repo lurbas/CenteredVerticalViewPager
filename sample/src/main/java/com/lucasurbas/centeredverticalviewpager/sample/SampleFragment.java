@@ -60,7 +60,7 @@ public class SampleFragment extends Fragment {
 
                         items = generateItems();
                         adapter.setItems(items);
-                        adapter.notifyItemRangeChanged(0, items.size());
+                        adapter.notifyDataSetChanged();
                     }
                 }, 2000);
             }
@@ -95,8 +95,9 @@ public class SampleFragment extends Fragment {
             case R.id.action_insert_item:
                 String item = generateItem();
                 items.add(position, item);
+                items.add(position, item);
                 adapter.setItems(items);
-                adapter.notifyItemRangeInserted(position, 1);
+                adapter.notifyItemRangeInserted(position, 2);
                 return true;
 
             case R.id.action_remove_item:
@@ -119,7 +120,7 @@ public class SampleFragment extends Fragment {
         Random r = new Random();
 
         List<String> items = new ArrayList<String>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             String text = "";
             for (int j = 0; j < 1 + r.nextInt(7); j++) {
                 text += ("Item " + i + "\n");
