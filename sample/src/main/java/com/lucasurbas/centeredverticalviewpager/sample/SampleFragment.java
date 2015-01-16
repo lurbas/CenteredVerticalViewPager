@@ -89,7 +89,7 @@ public class SampleFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
 
-        int position = adapter.getCount();
+        int position = 1;
 
         switch (menuItem.getItemId()) {
             case R.id.action_insert_item:

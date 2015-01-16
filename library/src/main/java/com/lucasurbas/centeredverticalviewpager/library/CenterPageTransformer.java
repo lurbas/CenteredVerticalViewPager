@@ -5,10 +5,10 @@ import android.view.View;
 /**
  * Created by Lucas on 12/2/14.
  */
-public class CenterPageTransformer implements VerticalViewPager.PageTransformer {
+public class CenterPageTransformer implements CenteredVerticalViewPager.PageTransformer {
 
     private static final String TAG = CenterPageTransformer.class.getSimpleName();
-    private final float minAlpha = VerticalViewPager.MIN_ALPHA;
+    private final float minAlpha = CenteredVerticalViewPager.MIN_ALPHA;
 
 
     public void transformPage(int containerHeight, View view, float position) {
