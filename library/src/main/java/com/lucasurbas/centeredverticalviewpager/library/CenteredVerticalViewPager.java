@@ -630,8 +630,8 @@ public class CenteredVerticalViewPager extends ViewGroup {
         requestLayout();
     }
 
-    public int getPagePreviewHeight(){
-        return  pagePreviewHeight;
+    public int getPagePreviewHeight() {
+        return pagePreviewHeight;
     }
 
     /**
@@ -858,6 +858,108 @@ public class CenteredVerticalViewPager extends ViewGroup {
         }
     }
 
+    private final static int STATE_ANIM_TOP = 1;
+    private final static int STATE_ANIM_BOTTOM = 2;
+    private final static int STATE_ANIM_BOTH = 3;
+    private final static int NOT_SET = -1111;
+
+    private void itemRemoved(final int position) {
+        dataSetChanged();
+
+        // This method only gets called if our observer is attached, so mAdapter is non-null.
+
+//        Log.v(TAG, "itemRangeRemoved: start");
+//
+//        final int adapterCount = mAdapter.getCount();
+//        mExpectedAdapterCount = adapterCount;
+//
+//        int state;
+//        final int animateTopItemStart;
+//        final int animateTopItemEnd;
+//        final int animateBottomItemStart;
+//        final int animateBottomItemEnd;
+//
+//        final int newCurrItem;
+//        if (position <= mCurItem) {
+//            newCurrItem = mCurItem - itemCount;
+//            state = STATE_ANIM_TOP;
+//            animateTopItemStart = positionStart - itemCount;
+//            animateTopItemEnd = positionStart;
+//            animateBottomItemStart = NOT_SET;
+//            animateBottomItemEnd = NOT_SET;
+//
+//        } else {
+//            newCurrItem = positionStart;
+//            state = STATE_ANIM_BOTH;
+//            animateTopItemStart = positionStart - itemCount;
+//            animateTopItemEnd = positionStart;
+//            animateBottomItemStart = positionStart + 1;
+//            animateBottomItemEnd = positionStart + itemCount;
+//        }
+//
+//        boolean isUpdating = false;
+//
+//        for (int i = 0; i < mItems.size(); i++) {
+//            final ItemInfo ii = mItems.get(i);
+//            mItems.remove(i);
+//            i--;
+//
+//            if (!isUpdating) {
+//                mAdapter.startUpdate(CenteredVerticalViewPager.this);
+//                isUpdating = true;
+//            }
+//
+//            mAdapter.destroyItem(CenteredVerticalViewPager.this, ii.position, ii.object);
+//        }
+//
+//        if (isUpdating) {
+//            mAdapter.finishUpdate(CenteredVerticalViewPager.this);
+//        }
+//
+//        Collections.sort(mItems, COMPARATOR);
+//
+//        // Reset our known page widths; populate will recompute them.
+//        final int childCount = getChildCount();
+//        for (int i = 0; i < childCount; i++) {
+//            final View child = getChildAt(i);
+//            final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+//            if (!lp.isDecor) {
+//                lp.heightFactor = 0.f;
+//            }
+//        }
+//
+//        setCurrentItemInternal(newCurrItem, false, true);
+//
+//        Log.v(TAG, "pendingRequestLayout");
+//        requestLayout();
+//
+//        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+//            @Override
+//            public void onGlobalLayout() {
+//                getViewTreeObserver().removeGlobalOnLayoutListener(this);
+//
+//                Set<ItemInfo> topItemInfos = new HashSet<ItemInfo>();
+//                Set<ItemInfo> bottomItemInfos = new HashSet<ItemInfo>();
+//                for (int i = 0; i < mItems.size(); i++) {
+//
+//                    final ItemInfo ii = mItems.get(i);
+//
+//                    if (animateTopItemStart != NOT_SET && animateTopItemEnd != NOT_SET && ii.position >= animateTopItemStart && ii.position < animateTopItemEnd) {
+//                        topItemInfos.add(ii);
+//                    }
+//                    if (animateBottomItemStart != NOT_SET && animateBottomItemEnd != NOT_SET && ii.position >= animateBottomItemStart && ii.position < animateBottomItemEnd) {
+//                        bottomItemInfos.add(ii);
+//                    }
+//                }
+//
+//                setViews(topItemInfos, -topItemInfos.size());
+//                setViews(bottomItemInfos, bottomItemInfos.size());
+//
+//                Log.v(TAG, "itemRangeRemoved: end");
+//            }
+//        });
+    }
+
     private void itemRangeInserted(final int positionStart, final int itemCount) {
 
         // This method only gets called if our observer is attached, so mAdapter is non-null.
@@ -870,18 +972,14 @@ public class CenteredVerticalViewPager extends ViewGroup {
         Set<ItemInfo> itemInfos = new HashSet<ItemInfo>();
         for (int i = 0; i < mItems.size(); i++) {
 
-
             final ItemInfo ii = mItems.get(i);
 
             if (positionStart <= mCurItem) {
-
                 if (ii.position < positionStart) {
                     itemInfos.add(ii);
                     isUpdating = true;
                 }
-
             } else {
-
                 if (ii.position >= positionStart) {
                     itemInfos.add(ii);
                     isUpdating = true;
@@ -954,17 +1052,16 @@ public class CenteredVerticalViewPager extends ViewGroup {
         }
     }
 
+    private void setViews(final Set<ItemInfo> itemInfos, final float positionOffset) {
+
+        Log.v(TAG, "setViews size: " + itemInfos.size() + ", offset: " + positionOffset);
+    }
+
     private void offsetViews(final Set<ItemInfo> itemInfos, final float positionOffset) {
 
         addPendingAction(new Runnable() {
             @Override
             public void run() {
-
-                if (mPageTransformer == null) {
-                    pendingActionsQueue.setExecuting(false);
-                    tryExecuteAction();
-                    return;
-                }
 
                 List<Animator> animators = new ArrayList<Animator>();
 
@@ -2976,7 +3073,7 @@ public class CenteredVerticalViewPager extends ViewGroup {
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-
+            itemRemoved(positionStart);
         }
     }
 

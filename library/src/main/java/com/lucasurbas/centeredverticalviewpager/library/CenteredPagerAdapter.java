@@ -158,11 +158,19 @@ public abstract class CenteredPagerAdapter {
         mObservable.notifyItemRangeInserted(positionStart, itemCount);
     }
 
-    /**
-     * This method should be called by the application when items were removed.
-     */
-    public void notifyItemRangeRemoved(int positionStart, int itemCount) {
-        mObservable.notifyItemRangeRemoved(positionStart, itemCount);
+    public void notifyItemInserted(int position) {
+        mObservable.notifyItemRangeInserted(position, 1);
+    }
+
+//    /**
+//     * This method should be called by the application when items were removed.
+//     */
+//    public void notifyItemRangeRemoved(int positionStart, int itemCount) {
+//        mObservable.notifyItemRangeRemoved(positionStart, itemCount);
+//    }
+
+    public void notifyItemRemoved(int position) {
+        mObservable.notifyItemRangeRemoved(position, 1);
     }
 
     /**

@@ -101,9 +101,13 @@ public class SampleFragment extends Fragment {
                 return true;
 
             case R.id.action_remove_item:
+                if(items.size() <= position + 1){
+                    return true;
+                }
+                items.remove(position);
                 items.remove(position);
                 adapter.setItems(items);
-                adapter.notifyItemRangeRemoved(position, 1);
+                adapter.notifyItemRangeRemoved(position, 2);
                 return true;
         }
         return super.onOptionsItemSelected(menuItem);
